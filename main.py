@@ -1,335 +1,189 @@
-from tksheet import Sheet
-import tkinter as tk
+from PyQt5 import QtWidgets, uic
+from PyQt5 import QtCore, QtGui
+import requests
+from bs4 import BeautifulSoup
+import os
+from datetime import datetime
+import xlsxwriter
+import asyncio
+import sys
+
+mainDir = os.getcwd()
+
+now = datetime.now()
+dt_string = now.strftime("%d.%m.%Y %H-%M-%S")
+dirName = dt_string
+
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36'}
+loginData = {
+    "kullaniciAdi": "R050",
+    "sifre": "105222"
+}
 
 
-class demo(tk.Tk):
+class Ui(QtWidgets.QMainWindow):
     def __init__(self):
-        tk.Tk.__init__(self)
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
-        self.frame = tk.Frame(self)
-        self.frame.grid_columnconfigure(0, weight=1)
-        self.frame.grid_rowconfigure(0, weight=1)
-        self.sheet = Sheet(self.frame,
-                           page_up_down_select_row=True,
-                           # empty_vertical = 0,
-                           column_width=120,
-                           startup_select=(0, 1, "rows"),
-                           # row_height = "4",
-                           # default_row_index = "numbers",
-                           # default_header = "both",
-                           # empty_horizontal = 0,
-                           # show_vertical_grid = False,
-                           # show_horizontal_grid = False,
-                           # auto_resize_default_row_index = False,
-                           # header_height = "3",
-                           # row_index_width = 100,
-                           # align = "e",
-                           # header_align = "w",
-                           # row_index_align = "w",
-                           data=[[f"Row {r}, Column {c}\nnewline1\nnewline2" for c in range(50)] for r in range(10)],
-                           # to set sheet data at startup
-                           # headers = [f"Column {c}\nnewline1\nnewline2" for c in range(30)],
-                           # row_index = [f"Row {r}\nnewline1\nnewline2" for r in range(2000)],
-                           # set_all_heights_and_widths = True, #to fit all cell sizes to text at start up
-                           # headers = 0, #to set headers as first row at startup
-                           # headers = [f"Column {c}\nnewline1\nnewline2" for c in range(30)],
-                           # theme = "light green",
-                           # row_index = 0, #to set row_index as first column at startup
-                           # total_rows = 2000, #if you want to set empty sheet dimensions at startup
-                           # total_columns = 30, #if you want to set empty sheet dimensions at startup
-                           height=500,  # height and width arguments are optional
-                           width=1000  # For full startup arguments see DOCUMENTATION.md
-                           )
-        # self.sheet.hide("row_index")
-        # self.sheet.hide("header")
-        # self.sheet.hide("top_left")
-        self.sheet.enable_bindings(("single_select",  # "single_select" or "toggle_select"
-                                    "drag_select",  # enables shift click selection as well
-                                    "column_drag_and_drop",
-                                    "row_drag_and_drop",
-                                    "column_select",
-                                    "row_select",
-                                    "column_width_resize",
-                                    "double_click_column_resize",
-                                    # "row_width_resize",
-                                    # "column_height_resize",
-                                    "arrowkeys",
-                                    "row_height_resize",
-                                    "double_click_row_resize",
-                                    "right_click_popup_menu",
-                                    "rc_select",
-                                    "rc_insert_column",
-                                    "rc_delete_column",
-                                    "rc_insert_row",
-                                    "rc_delete_row",
-                                    "hide_columns",
-                                    "copy",
-                                    "cut",
-                                    "paste",
-                                    "delete",
-                                    "undo",
-                                    "edit_cell"))
-        # self.sheet.disable_bindings() #uses the same strings
-        # self.sheet.enable_bindings()
-
-        self.frame.grid(row=0, column=0, sticky="nswe")
-        self.sheet.grid(row=0, column=0, sticky="nswe")
-
-        """_________________________ EXAMPLES _________________________ """
-        """_____________________________________________________________"""
-
-        # __________ CHANGING THEME __________
-
-        # self.sheet.change_theme("light green")
-
-        # __________ DISPLAY SUBSET OF COLUMNS __________
-
-        self.sheet.display_subset_of_columns(indexes=[0, 1, 2, 3, 4, 5], enable=True)
-        # self.sheet.display_columns(enable = False)
-        self.sheet.insert_column(idx=0)
-        self.sheet.insert_columns(columns=5, idx=10, mod_column_positions=False)
-
-        # __________ HIGHLIGHT / DEHIGHLIGHT CELLS __________
-
-        self.sheet.highlight_cells(row=5, column=5, fg="red")
-        self.sheet.highlight_cells(row=5, column=1, fg="red")
-        self.sheet.highlight_cells(row=5, bg="#ed4337", fg="white", canvas="row_index")
-        self.sheet.highlight_cells(column=0, bg="#ed4337", fg="white", canvas="header")
-
-        # self.sheet.highlight_columns([7, 8, 9], bg = "light blue", fg = "purple")
-        # self.sheet.insert_columns(columns = [[1, 2, 3], [4, 5, 6], [7, 8, 9]], idx = 8)
-        # self.sheet.delete_column(idx = 2)
-        # self.sheet.highlight_rows([7, 8, 9], bg = "light blue", fg = "purple")
-        # self.sheet.insert_rows(rows = 5, idx = 8)
-        # self.sheet.insert_row(idx = 10, values = ["hi"])
-        # self.sheet.move_row(7, 0)
-        # self.sheet.move_column(6, 0)
-        # self.sheet.delete_row(idx = 2)
-        # self.sheet.dehighlight_rows(8)
-
-        # self.sheet.highlight_columns(4, fg = "yellow")
-
-        # __________ CELL / ROW / COLUMN ALIGNMENTS __________
-
-        self.sheet.align_cells(row=1, column=1, align="e")
-        self.sheet.align_rows(rows=3, align="e")
-        self.sheet.align_columns(columns=4, align="e")
-
-        # __________ DATA AND DISPLAY DIMENSIONS __________
-
-        # self.sheet.total_rows(4) #will delete rows if set to less than current data rows
-        # self.sheet.total_columns(2) #will delete columns if set to less than current data columns
-        # self.sheet.sheet_data_dimensions(total_rows = 4, total_columns = 2)
-        # self.sheet.sheet_display_dimensions(total_rows = 4, total_columns = 6) #currently resets widths and heights
-        # self.sheet.set_sheet_data_and_display_dimensions(total_rows = 4, total_columns = 2) #currently resets widths and heights
-
-        # __________ SETTING OR RESETTING TABLE DATA __________
-
-        # .set_sheet_data() function returns the object you use as argument
-        # verify checks if your data is a list of lists, raises error if not
-        # self.data = self.sheet.set_sheet_data([[f"Row {r} Column {c}" for c in range(30)] for r in range(2000)], verify = False)
-
-        # __________ SETTING ROW HEIGHTS AND COLUMN WIDTHS __________
-
-        # self.sheet.set_cell_data(0, 0, "\n".join([f"Line {x}" for x in range(500)]))
-        # self.sheet.set_column_data(1, ("" for i in range(2000)))
-        # self.sheet.row_index((f"Row {r}" for r in range(2000))) #any iterable works
-        # self.sheet.row_index("\n".join([f"Line {x}" for x in range(500)]), 2)
-        # self.sheet.column_width(column = 0, width = 300)
-        # self.sheet.row_height(row = 0, height = 60)
-        # self.sheet.set_column_widths([120 for c in range(30)])
-        # self.sheet.set_row_heights([30 for r in range(2000)])
-        # self.sheet.set_all_column_widths()
-        # self.sheet.set_all_row_heights()
-        # self.sheet.set_all_cell_sizes_to_text()
-
-        # __________ BINDING A FUNCTIONS TO USER ACTIONS __________
-
-        # self.sheet.extra_bindings([("cell_select", self.cell_select),
-        #                            ("begin_edit_cell", self.begin_edit_cell),
-        #                           ("end_edit_cell", self.end_edit_cell),
-        #                            ("shift_cell_select", self.shift_select_cells),
-        #                            ("drag_select_cells", self.drag_select_cells),
-        #                            ("ctrl_a", self.ctrl_a),
-        #                            ("row_select", self.row_select),
-        #                            ("shift_row_select", self.shift_select_rows),
-        #                            ("drag_select_rows", self.drag_select_rows),
-        #                            ("column_select", self.column_select)
-        #                            ("shift_column_select", self.shift_select_columns),
-        #                            ("drag_select_columns", self.drag_select_columns),
-        #                            ("deselect", self.deselect)
-        #                            ])
-        # self.sheet.extra_bindings("bind_all", self.all_extra_bindings)
-        # self.sheet.extra_bindings("begin_edit_cell", self.begin_edit_cell)
-        # self.sheet.extra_bindings([("cell_select", None)]) #unbind cell select
-        # self.sheet.extra_bindings("unbind_all") #remove all functions set by extra_bindings()
-
-        # __________ BINDING NEW RIGHT CLICK FUNCTION __________
-
-        # self.sheet.bind("<3>", self.rc)
-
-        # __________ SETTING HEADERS __________
-
-        # self.sheet.headers((f"Header {c}" for c in range(30))) #any iterable works
-        # self.sheet.headers("Change header example", 2)
-        # print (self.sheet.headers())
-        # print (self.sheet.headers(index = 2))
-
-        # __________ SETTING ROW INDEX __________
-
-        # self.sheet.row_index((f"Row {r}" for r in range(2000))) #any iterable works
-        # self.sheet.row_index("Change index example", 2)
-        # print (self.sheet.row_index())
-        # print (self.sheet.row_index(index = 2))
-
-        # __________ INSERTING A ROW __________
-
-        # self.sheet.insert_row(values = (f"my new row here {c}" for c in range(30)), idx = 0) # a filled row at the start
-        # self.sheet.insert_row() # an empty row at the end
-
-        # __________ INSERTING A COLUMN __________
-
-        # self.sheet.insert_column(values = (f"my new col here {r}" for r in range(2050)), idx = 0) # a filled column at the start
-        # self.sheet.insert_column() # an empty column at the end
-
-        # __________ SETTING A COLUMNS DATA __________
-
-        # any iterable works
-        # self.sheet.set_column_data(0, values = (0 for i in range(2050)))
-
-        # __________ SETTING A ROWS DATA __________
-
-        # any iterable works
-        # self.sheet.set_row_data(0, values = (0 for i in range(35)))
-
-        # __________ SETTING A CELLS DATA __________
-
-        # self.sheet.set_cell_data(1, 2, "NEW VALUE")
-
-        # __________ GETTING FULL SHEET DATA __________
-
-        # self.all_data = self.sheet.get_sheet_data()
-
-        # __________ GETTING CELL DATA __________
-
-        # print (self.sheet.get_cell_data(0, 0))
-
-        # __________ GETTING ROW DATA __________
-
-        # print (self.sheet.get_row_data(0)) # only accessible by index
-
-        # __________ GETTING COLUMN DATA __________
-
-        # print (self.sheet.get_column_data(0)) # only accessible by index
-
-        # __________ GETTING SELECTED __________
-
-        # print (self.sheet.get_currently_selected())
-        # print (self.sheet.get_selected_cells())
-        # print (self.sheet.get_selected_rows())
-        # print (self.sheet.get_selected_columns())
-        # print (self.sheet.get_selection_boxes())
-        # print (self.sheet.get_selection_boxes_with_types())
-
-        # __________ SETTING SELECTED __________
-
-        # self.sheet.deselect("all")
-        # self.sheet.create_selection_box(0, 0, 2, 2, type_ = "cells") #type here is "cells", "cols" or "rows"
-        # self.sheet.set_currently_selected(0, 0)
-        # self.sheet.set_currently_selected("row", 0)
-        # self.sheet.set_currently_selected("column", 0)
-
-        # __________ CHECKING SELECTED __________
-
-        # print (self.sheet.cell_selected(0, 0))
-        # print (self.sheet.row_selected(0))
-        # print (self.sheet.column_selected(0))
-        # print (self.sheet.anything_selected())
-        # print (self.sheet.all_selected())
-
-        # __________ HIDING THE ROW INDEX AND HEADERS __________
-
-        # self.sheet.hide("row_index")
-        # self.sheet.hide("top_left")
-        # self.sheet.hide("header")
-
-        # __________ ADDITIONAL BINDINGS __________
-
-        # self.sheet.bind("<Motion>", self.mouse_motion)
-
-    """
-
-    UNTIL DOCUMENTATION IS COMPLETE, PLEASE BROWSE THE FILE
-    _tksheet.py FOR A FULL LIST OF FUNCTIONS AND THEIR PARAMETERS
-
-    """
-
-    def all_extra_bindings(self, event):
-        print(event)
-
-    def begin_edit_cell(self, event):
-        print(event)  # event[2] is keystroke
-        return event[2]  # return value is the text to be put into cell edit window
-
-    def end_edit_cell(self, event):
-        print(event)
-
-    def window_resized(self, event):
-        pass
-        # print (event)
-
-    def mouse_motion(self, event):
-        region = self.sheet.identify_region(event)
-        row = self.sheet.identify_row(event, allow_end=False)
-        column = self.sheet.identify_column(event, allow_end=False)
-        print(region, row, column)
-
-    def deselect(self, event):
-        print(event, self.sheet.get_selected_cells())
-
-    def rc(self, event):
-        print(event)
-
-    def cell_select(self, response):
-        # print (response)
-        pass
-
-    def shift_select_cells(self, response):
-        print(response)
-
-    def drag_select_cells(self, response):
-        pass
-        # print (response)
-
-    def ctrl_a(self, response):
-        print(response)
-
-    def row_select(self, response):
-        print(response)
-
-    def shift_select_rows(self, response):
-        print(response)
-
-    def drag_select_rows(self, response):
-        pass
-        # print (response)
-
-    def column_select(self, response):
-        print(response)
-        # for i in range(50):
-        #    self.sheet.create_dropdown(i, response[1], values=[f"{i}" for i in range(200)], set_value="100",
-        #                               destroy_on_select = False, destroy_on_leave = False, see = False)
-        # print (self.sheet.get_cell_data(0, 0))
-        # self.sheet.refresh()
-
-    def shift_select_columns(self, response):
-        print(response)
-
-    def drag_select_columns(self, response):
-        pass
-        # print (response)
-
-
-app = demo()
-app.mainloop()
+        super(Ui, self).__init__()
+        uic.loadUi('home.ui', self)
+
+        self.chkImage = self.findChild(QtWidgets.QCheckBox, "chkImageDownload")
+        self.userNameInput = self.findChild(QtWidgets.QTextEdit, 'textUsername').setText("Kullanıcı Adı Burada")
+        self.passwordInput = self.findChild(QtWidgets.QTextEdit, 'txtPassword').setText("Şifre Burada")
+        self.passwordInput = self.findChild(QtWidgets.QTextEdit, 'txtPassword')
+        self.userNameInput = self.findChild(QtWidgets.QTextEdit, 'textUsername')
+        self.tableType = self.findChild(QtWidgets.QComboBox, 'cmbTableType')
+        self.lblItemLen = self.findChild(QtWidgets.QLabel, 'lblItemLen')
+        self.lblPageLen = self.findChild(QtWidgets.QLabel, 'lblPageLen')
+        self.lblProgressInfo = self.findChild(QtWidgets.QLabel, 'lblProgressInfo')
+
+        self.table = self.findChild(QtWidgets.QTableWidget, "tableWidget")
+
+        self.rows = [
+            ["A1", "B1", "C1", "D1", "E1", "F1"],
+            ["A2", "B2", "C2", "D2", "E2", "F2"],
+            ["A3", "B3", "C3", "D3", "E3", "F3"],
+            ["A4", "B4", "C4", "D4", "E4", "F4"],
+            ["A5", "B5", "C5", "D5", "E5", "F5"],
+            ["A6", "B6", "C6", "D6", "E6", "F6"],
+            ["A7", "B7", "C7", "D7", "E7", "F7"],
+            ["A8", "B8", "C8", "D8", "E8", "F8"],
+            ["A9", "B9", "C9", "D9", "E9", "F9"],
+            ["A10", "B10", "C10", "D10", "E10", "F10"],
+            ["A11", "B11", "C11", "D11", "E11", "F11"],
+            ["A12", "B12", "C12", "D12", "E12", "F12"],
+            ["A13", "B13", "C13", "D13", "E13", "F13"],
+            ["A14", "B14", "C14", "D14", "E14", "F14"],
+            ["A15", "B15", "C15", "D15", "E15", "F15"],
+            ["A16", "B16", "C16", "D16", "E16", "F16"],
+            ["A17", "B17", "C17", "D17", "E17", "F17"],
+            ["A18", "B18", "C18", "D18", "E18", "F18"],
+            ["A19", "B19", "C19", "D19", "E19", "F19"],
+            ["A20", "B20", "C20", "D20", "E20", "F20"],
+            ["A21", "B21", "C21", "D21", "E21", "F21"],
+            ["A22", "B22", "C22", "D22", "E22", "F22"],
+        ]
+
+        self.startButton = self.findChild(QtWidgets.QPushButton, 'btnStart')
+        self.startButton.clicked.connect(self.printButtonPressed)
+
+        self.show()
+
+    def kacSayfa(self):
+        sayfaSayisi = ""
+        with requests.Session() as s:
+            url = "https://ozerdemmotosiklet.com/Site/Giris"
+            # r = s.get(url, headers=headers)
+            r = s.post(url, data=loginData, headers=headers)
+
+            sayfaInfo = s.get("https://ozerdemmotosiklet.com/Siparis/StokAra?Kategori=Tumu&sayfa=1&listeGorunumu=liste",
+                              headers=headers)
+            sayfaContent = BeautifulSoup(sayfaInfo.content, 'html.parser')
+            sayfaSayisiText = sayfaContent.find("div", {"class": "mt20 text-center"})
+            sayfaSayisi = sayfaSayisiText.span.text.split(": ")[1]
+        return   sayfaSayisi
+
+    def imgDowload(self, resimAdi, uzanti, img_data):
+        with open(mainDir + "/" + dirName + "/" + resimAdi + "." + uzanti, "wb") as handler:
+            handler.write(img_data)
+
+    def firstList(self, imgDow=True, excelExport=True, excelName="", username="", password=""):
+        islemBaslangic = datetime.now().strftime("%d.%m.%Y %H-%M-%S")
+        if imgDow == True:
+            os.mkdir(str(dirName))
+
+        with requests.Session() as s:
+            s.headers.update(headers)
+            url = "https://ozerdemmotosiklet.com/Site/Giris"
+            s.post(url, data=loginData)
+
+            sayfaSayisi =  self.kacSayfa()
+
+            row = 1
+
+            if excelName == "":
+                excelName = dt_string
+
+            workbook = xlsxwriter.Workbook(excelName + '.xlsx')
+            worksheet = workbook.add_worksheet()
+            for x in range(int(sayfaSayisi)):
+                sayfa = x + 1
+                self.lblProgressInfo.setText("Sayfa " + str(sayfa) + " baslangıç:" + str(
+                    datetime.now().strftime("%d.%m.%Y %H-%M-%S")) + " | Toplam " + str(row) + " ürün bulundu")
+                print("Sayfa: " + str(sayfa))
+
+                r2 = s.get(
+                    "https://ozerdemmotosiklet.com/Siparis/StokAra?Kategori=Tumu&sayfa=" + str(
+                        sayfa) + "&listeGorunumu=liste")
+                soup = BeautifulSoup(r2.content, 'html.parser')
+
+                table = soup.find("tbody", {"id": "Liste"})
+
+                for tr in table.find_all("tr"):
+                    datas = tr.find_all("td")
+                    urunKodu = datas[1].text
+                    urunAdi = datas[2].text
+                    urunFiyati = datas[6].text[:-1]
+                    resim = datas[0].img
+
+                    if excelExport == True:
+                        worksheet.write('A' + str(row), urunKodu)
+                        worksheet.write('B' + str(row), urunAdi)
+                        money_format = workbook.add_format({'num_format': '[$R]#,##0.00'})
+                        worksheet.write('C' + str(row), urunFiyati, money_format)
+                        worksheet.write('D' + str(row), "https://ozerdemmotosiklet.com/" + resim['src'])
+                        row += 1
+
+                    if imgDow == True and resim['src'].find("ResimYok") == -1:
+                        img_data = requests.get("https://ozerdemmotosiklet.com/" + resim['src']).content
+                        resimAdi = urunKodu.replace('/', "-")
+                        uzanti = resim['src'].split(".")[-1]
+                        self.imgDowload(resimAdi, uzanti, img_data)
+
+                self.lblProgressInfo.setText("Sayfa " + str(sayfa) + " bitti:" + str(
+                    datetime.now().strftime("%d.%m.%Y %H-%M-%S")) + " | Toplam " + str(row) + " ürün bulundu")
+
+            print("kod: " + urunKodu + " Adı: " + urunAdi + " Fiyat: " + urunFiyati + " satir no : " + str(row))
+
+            workbook.close()
+            islemBitis = datetime.now().strftime("%d.%m.%Y %H-%M-%S")
+            print("İşlem Başlangıcı:" + str(islemBaslangic) + " | İşlem Bitişi " + str(islemBitis))
+            return  True
+
+    def printButtonPressed(self):
+        self.startButton.setText("Lütfen Bekleyin")
+        self.startButton.setEnabled(False)
+        sayfaSayisiLbl =  int(self.kacSayfa())
+        itemLen = sayfaSayisiLbl * 100
+        self.lblItemLen.setText("Hedef Sayfa Sayısı: " + str(sayfaSayisiLbl))
+        self.lblPageLen.setText("Tahmini Hedef Ürün: " + str(itemLen))
+        self.callTable()
+
+    def callTable(self):
+        imageDownload = self.chkImage.isChecked()
+        userName = self.userNameInput.toPlainText()
+        password = self.passwordInput.toPlainText()
+        tableType = self.tableType.currentText()
+        if tableType == "Gelişmiş Tablo":
+            return  self.firstList(imageDownload, True, "", userName, password)
+
+    def setCompareTable(self):
+        self.table.setRowCount(len(self.rows))
+        for row in enumerate(self.rows):
+            for col in enumerate(row[1]):
+                item = QtWidgets.QTableWidgetItem()
+                item.setText(col[1])
+                item.setFlags(QtCore.Qt.ItemIsEnabled)
+                if col[1] == "E5" or col[1] == "E22":
+                    item.setBackground(QtGui.QColor(39, 174, 96))
+                    item.setForeground(QtGui.QColor(255, 255, 255))
+                if col[1] == "E12" or col[1] == "E8":
+                    item.setBackground(QtGui.QColor(231, 76, 60))
+                    item.setForeground(QtGui.QColor(255, 255, 255))
+
+                self.table.setItem(row[0], col[0], item)
+
+
+app = QtWidgets.QApplication(sys.argv)
+window = Ui()
+app.exec_()
